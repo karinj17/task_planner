@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors'); //when the clients aren't on the server
+
+const bcrypt = require("bcrypt");
 const app = express(); //server-app
 const pg = require('pg');
 const dbURI="postgres://pexmmwdyftxqmm:f8ff838ef3f9028287453919a7a4069cf36cda0afa467cf6573ef8eb99f67032@ec2-46-137-173-221.eu-west-1.compute.amazonaws.com:5432/d1fpt2lmsoq7v7" + "?ssl=true";
@@ -34,6 +36,35 @@ app.post('/travels', async function (req, res) {
     let updata = req.body;
 
     let sql = 'INSERT INTO travels (id, destination, date, km, description, userid) VALUES(DEFAULT, $1, $2, $3, $4, $5) RETURNING *';
+    let values = [updata.dest, updata.date, updata.km, updata.descr, updata.userid];
+
+    try {
+        let result = await pool.query(sql, values);
+
+        if (result.rows.length > 0) {
+            res.status(200).json({msg: "insert ok"}); //send response  
+        }
+        else {
+            throw "Insert failed";
+        }
+    }
+
+    catch(err){
+
+        res.status(500).json({error: err}); //send error resposonse
+    }
+  
+});
+
+// endpoint - users POST ---------------------------------
+app.post('/users', async function (req, res) {
+    
+    let updata = req.body; //thedata sent from the client
+    
+    //hashing the password before it is stored in the DB
+    let hash = bcrypt.hashSync(update.password, 109);
+
+    let sql = 'INSERT INTO users (id, email, pswhash) VALUES(DEFAULT, $1, $2) RETURNING *';
     let values = [updata.dest, updata.date, updata.km, updata.descr, updata.userid];
 
     try {
